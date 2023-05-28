@@ -1,6 +1,6 @@
 import express from "express";
+import SocketIO from "socket.io";
 import http from "http";
-import WebSocket from "ws";
 
 const app = express();
 
@@ -10,13 +10,16 @@ app.use("/public", express.static(__dirname + "/public"));
 app.get("/", (req, res) => res.render("home"));
 app.get("/*", (req, res) => res.redirect("/"));
 
-const handleListen = () => console.log(`Listening on http://localhost:3000`);
 
-const server = http.createServer(app); //http server
+const httpServer = http.createServer(app); //http server
+const wsServer = SocketIO(httpServer);
+
+wsServer.on("connection", socket => { //프론트로부터 소켓 받을 준비
+  console.log(socket);
+});
+
+/* const sockets = [];
 const wss = new WebSocket.Server({ server }); //webSocket server
-
-const sockets = [];
-
 wss.on("connection", (socket) => {
   sockets.push(socket);
   socket["nickname"] = "Anon"
@@ -33,6 +36,7 @@ wss.on("connection", (socket) => {
         break;
     }
   });
-});
+}); */
 
-server.listen(3000, handleListen);
+const handleListen = () => console.log(`Listening on http://localhost:3000`);
+httpServer.listen(3000, handleListen);
