@@ -15,11 +15,12 @@ const httpServer = http.createServer(app); //http server
 const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", socket => { //프론트로부터 소켓 받을 준비
+  socket.onAny((event) => {
+    console.log(`Socket Event: ${event}`);
+  });
   socket.on("enter_room", (roomName, done) => { 
-    console.log(roomName);
-    setTimeout(() => {
-      done("hello from the backend"); //function을 frontend에서 실행되도록 backend가 요청(backend에서 실행X)
-    }, 15000);
+    socket.join("roomName");  //채팅방 join
+    done();
   });
 });
 
