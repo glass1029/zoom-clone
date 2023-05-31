@@ -19,8 +19,9 @@ wsServer.on("connection", socket => { //프론트로부터 소켓 받을 준비
     console.log(`Socket Event: ${event}`);
   });
   socket.on("enter_room", (roomName, done) => { 
-    socket.join("roomName");  //채팅방 join
+    socket.join(roomName);  //채팅방 join
     done();
+    socket.to(roomName).emit("welcome");
   });
 });
 
