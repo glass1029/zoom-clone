@@ -14,6 +14,21 @@ app.get("/*", (req, res) => res.redirect("/"));
 const httpServer = http.createServer(app); //http server
 const wsServer = SocketIO(httpServer);
 
+function publicRooms() {
+  const {
+    sockets: {
+      adapter: { sids, rooms },
+    },
+  } = wsServer;
+  const publicRooms = [];
+  rooms.forEach((_, key) => { //value값은 사용하지 않고 key만 필요
+    if(sids.get(key) === undefined){  //
+      publicRooms.push(key);
+    }
+  });
+  return publicRooms;
+}
+
 wsServer.on("connection", socket => { //프론트로부터 소켓 받을 준비
   socket["nickname"] = "Anon";
   socket.onAny((event) => {
