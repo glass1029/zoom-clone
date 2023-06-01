@@ -22,7 +22,7 @@ function publicRooms() {
   } = wsServer;
   const publicRooms = [];
   rooms.forEach((_, key) => { //value값은 사용하지 않고 key만 필요
-    if(sids.get(key) === undefined){  //
+    if(sids.get(key) === undefined){  //rooms에는 public, private 둘 다 존재, sids에는 private만 존재
       publicRooms.push(key);
     }
   });
@@ -37,10 +37,14 @@ wsServer.on("connection", socket => { //프론트로부터 소켓 받을 준비
   socket.on("enter_room", (roomName, done) => { 
     socket.join(roomName);  //채팅방 join
     done();
-    socket.to(roomName).emit("welcome", socket.nickname);
+    socket.to(roomName).emit("welcome", socket.nickname); //하나의 특정 socket에게
+    wsServer.sockets.emit("room_change", publicRooms());  //모든 socket에게
   });
-  socket.on("disconnecting", () => { 
+  socket.on("disconnecting", () => { //socket이 방을 떠나기 바로 직전에 실행
     socket.rooms.forEach((room) => socket.to(room).emit("bye", socket.nickname));
+  });
+  socket.on("disconnect", () => {
+    wsServer.sockets.emit("room_change", publicRooms());
   });
   socket.on("new_message", (msg, room, done) => {
     socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
