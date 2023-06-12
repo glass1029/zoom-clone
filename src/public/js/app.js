@@ -150,7 +150,19 @@ socket.on("ice", ice => {
 
 // RTC Code
 function makeConnection() {
-  myPeerConnection = new RTCPeerConnection(); //각 브라우저에서 peer-to-peer 연결 만들기
+  myPeerConnection = new RTCPeerConnection({
+    iceServers: [ //stun서버: 장치에 공용주소를 알려주는 서버
+      {
+        urls: [
+          "stun:stun.l.google.com:19302",
+          "stun:stun1.l.google.com:19302",
+          "stun:stun2.l.google.com:19302",
+          "stun:stun3.l.google.com:19302",
+          "stun:stun4.l.google.com:19302",
+        ],
+      },
+    ],
+  }); //각 브라우저에서 peer-to-peer 연결 만들기
   myPeerConnection.addEventListener("icecandidate", handleIce);  // Ice candidate : 인터넷 연결 생성. WebRTCd에 필요한 프로토콜로, 멀리 떨어진 장치와 소통할 수 있게 한다. (중재 프로세스 역할)
   myPeerConnection.addEventListener("addstream", handleAddStream);
   myStream
