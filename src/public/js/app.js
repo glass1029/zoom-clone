@@ -81,8 +81,15 @@ function handleCameraClick() {
   }
 }
 
-async function handleCameraChange() {
+async function handleCameraChange() { //카메라를 변경할 때, 새로운 stream 생성
   await getMedia(cameraSelect.value);
+  if (myPeerConnection) {
+    const videoTrack = myStream.getVideoTracks()[0];
+    const videoSender = myPeerConnection
+    .getSenders() //sender는 내 peer가 아닌 다른 peer로 보내진 media stream track을 컨트롤
+    .find((sender) => sender.track.kind === 'video');
+    videoSender.replaceTrack(videoTrack);
+  }
 }
 
 muteBtn.addEventListener("click", handleMuteClick);
