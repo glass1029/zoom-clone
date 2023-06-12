@@ -122,21 +122,41 @@ socket.on("welcome", async () => {
 
 // 초대장을 받은 Peer B에서 실행
 socket.on("offer", async(offer) => {
+  console.log("received the offer");
   myPeerConnection.setRemoteDescription(offer); //받은 offer description
   const answer = await myPeerConnection.createAnswer(); //연결된 브라우저에게 보낼 answer 생성
   myPeerConnection.setLocalDescription(answer);
   socket.emit("answer", answer, roomName);
+  console.log("sent the answer");
 });
 
 // Peer A에서 실행
 socket.on("answer", answer => {
+  console.log("received the answer");
   myPeerConnection.setRemoteDescription(answer); 
+});
+
+socket.on("ice", ice => {
+  console.log("received candidate");
+  myPeerConnection.addIceCandidate(ice);
 });
 
 // RTC Code
 function makeConnection() {
   myPeerConnection = new RTCPeerConnection(); //각 브라우저에서 peer-to-peer 연결 만들기
+  myPeerConnection.addEventListener("icecandidate", handleIce);  // Ice candidate : 인터넷 연결 생성. WebRTCd에 필요한 프로토콜로, 멀리 떨어진 장치와 소통할 수 있게 한다. (중재 프로세스 역할)
+  myPeerConnection.addEventListener("addstream", handleAddStream);
   myStream
     .getTracks()
     .forEach((track) => myPeerConnection.addTrack(track, myStream)); //각 브라우저에 카메라와 마이크 데이터 stream을 받아서 연결 안에 넣기
+}
+
+function handleIce(data) {
+  console.log("send candidate");
+  socket.emit("ice", data.candidate, roomName); //브라우저들끼리 candidate를 서로 주고받음
+}
+
+function handleAddStream(data) {
+  const peerFace = document.getElementById("peerFace");
+  peerFace.srcObject = data.stream;
 }
