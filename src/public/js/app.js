@@ -13,6 +13,7 @@ let muted = false;
 let cameraOff = false;
 let roomName;
 let myPeerConnection;
+let myDataChannel;  //peer마다 다르게 정의
 
 async function getCameras() {
   try {
@@ -121,6 +122,9 @@ welcomeForm.addEventListener("submit", handleWelcomeSubmit);
 // Socket Code
 // 방을 처음 개설한 peer A에게만 실행됨
 socket.on("welcome", async () => {
+  myDataChannel = myPeerConnection.createDataChannel("chat"); //peer A가 dataChannel 생성
+  myDataChannel.addEventListener("message", console.log);
+  console.log("made data Channel"); //다른 peer는 만들 필요 없이 peer A만 생성
   const offer = await myPeerConnection.createOffer(); //다른 브라우저가 참가할 수 있도록 초대장 만드는 역할
   myPeerConnection.setLocalDescription(offer);  //생성한 offer로 연결 구성
   console.log("sent the offer");
@@ -129,6 +133,10 @@ socket.on("welcome", async () => {
 
 // 초대장을 받은 Peer B에서 실행
 socket.on("offer", async(offer) => {
+  myPeerConnection.addEventListener("datachannel", (event) => { //peer A가 만든 dataChannel 받기
+    myDataChannel = event.channel;
+    myDataChannel.addEventListener("message", console.log);
+  });
   console.log("received the offer");
   myPeerConnection.setRemoteDescription(offer); //받은 offer description
   const answer = await myPeerConnection.createAnswer(); //연결된 브라우저에게 보낼 answer 생성
@@ -179,3 +187,15 @@ function handleAddStream(data) {
   const peerFace = document.getElementById("peerFace");
   peerFace.srcObject = data.stream;
 }
+
+/*
+  RTCPeerConnection.createDataChannel()
+  video, audio뿐 아니라 이미지, 파일, 텍스트, 게입 업데이트 패킷 등도 주고받을 수 있음.
+  socketIO 없이도 채팅을 만들 수 있음.
+
+  webRTC의 단점
+  - peer가 많은 경우 느려짐. (모든 peer에게 데이터를 보내고 받기 때문)
+
+  SFC (Selective Forwardinf Unit)
+  - 서버에 업로드하면 서버는 다른 peer에게 저사양의 stream을 제공함.
+*/
